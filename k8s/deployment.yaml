@@ -16,4 +16,4 @@ spec:
         - name: aws-devops-demo
           image: discoverdevops/aws-devops-demo:latest
           ports:
-            - containerPort: 808
+            - containerPort: 80

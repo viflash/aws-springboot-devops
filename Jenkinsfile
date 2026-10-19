@@ -27,7 +27,7 @@ pipeline {
                 ]) {
                     sh '''
                         set -eu
-
+gi
                         export DOCKER_CONFIG="$(mktemp -d)"
                         trap 'rm -rf "$DOCKER_CONFIG"' EXIT
 
@@ -42,7 +42,12 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sshagent(credentials: ['ubuntu-agentVM1-credentials']) {
+                steps {
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'ubuntu-agentVM1-credentials',
+                    keyFileVariable: 'SSH_KEY',
+                    usernameVariable: 'SSH_USER'
+                )]) {
                     sh '''
                         set -eu
                         grep -q 'IMAGE_PLACEHOLDER' k8s/deployment.yaml

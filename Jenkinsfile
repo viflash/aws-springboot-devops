@@ -1,3 +1,4 @@
+
 pipeline {
     agent {
         label 'ubuntu-agent-2'
@@ -17,11 +18,24 @@ pipeline {
 
         stage('Build and Push') {
             steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
-                        def image = docker.build(IMAGE)
-                        image.push()
-                    }
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-crgiteds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        set -eu
+
+                        export DOCKER_CONFIG="$(mktemp -d)"
+                        trap 'rm -rf "$DOCKER_CONFIG"' EXIT
+
+                        echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USER" --password-stdin
+
+                        docker build -t "$IMAGE" .
+                        docker push "$IMAGE"
+                    '''
                 }
             }
         }

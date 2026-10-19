@@ -31,14 +31,14 @@ pipeline {
                 sshagent(credentials: ['ubuntu-agentVM1-credentials']) {
                     sh '''
                         set -eu
+                        grep -q 'IMAGE_PLACEHOLDER' k8s/deployment.yaml
+                        sed -i "s|IMAGE_PLACEHOLDER|${IMAGE}|g" k8s/deployment.yaml
                         remote_dir="/tmp/aws-devops-demo-${BUILD_NUMBER}"
                         ssh -o StrictHostKeyChecking=no "$MINIKUBE_HOST" "mkdir -p '$remote_dir'"
                         scp -o StrictHostKeyChecking=no -r k8s/. "$MINIKUBE_HOST:$remote_dir/"
                         ssh -o StrictHostKeyChecking=no "$MINIKUBE_HOST" \
                             "set -eu
-                            sed 's|IMAGE_PLACEHOLDER|$IMAGE|g' '$remote_dir/deployment.yaml' > '$remote_dir/deployment-rendered.yaml'
-                            kubectl apply -f '$remote_dir/deployment-rendered.yaml'
-                            kubectl apply -f '$remote_dir/service.yaml'
+                            kubectl apply -f '$remote_dir/'
                             kubectl rollout status deployment/aws-devops-demo --timeout=180s"
                     '''
                 }
